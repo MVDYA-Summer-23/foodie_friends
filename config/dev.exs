@@ -2,7 +2,7 @@ import Config
 
 # Configure your database
 config :foodie_friends, FoodieFriends.Repo,
-  username: "postgres",
+  username:  System.get_env("POSTGRES_USERNAME") || "postgres",
   password: "postgres",
   hostname: "localhost",
   database: "foodie_friends_dev",
