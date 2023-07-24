@@ -1,4 +1,5 @@
 defmodule FoodieFriendsWeb.Router do
+  alias FoodieFriendsWeb.PostController
   use FoodieFriendsWeb, :router
 
   pipeline :browser do
@@ -18,6 +19,7 @@ defmodule FoodieFriendsWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    resources "/posts", PostController
   end
 
   # Other scopes may use custom stacks.
