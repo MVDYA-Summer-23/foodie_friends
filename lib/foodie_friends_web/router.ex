@@ -1,5 +1,4 @@
 defmodule FoodieFriendsWeb.Router do
-  alias FoodieFriendsWeb.PostController
   use FoodieFriendsWeb, :router
 
   pipeline :browser do
