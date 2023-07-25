@@ -21,6 +21,21 @@ defmodule FoodieFriends.Posts do
     Repo.all(Post)
   end
 
+  def search(search_params) do
+    query =
+      if String.trim(search_params) == "" do
+        # If the search term is empty, return all posts
+        from p in Post, order_by: [desc: p.inserted_at]
+      else
+        # Perform the search based on the post title or content
+        from p in Post,
+          where: ilike(p.title, ^"%#{search_params}%") or ilike(p.content, ^"%#{search_params}%"),
+          order_by: [desc: p.inserted_at]
+      end
+
+    posts = Repo.all(query)
+  end
+
   @doc """
   Gets a single post.
 
