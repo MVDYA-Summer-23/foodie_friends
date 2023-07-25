@@ -7,10 +7,12 @@ defmodule FoodieFriendsWeb.PostController do
   def index(conn, %{"q" => search_params}) do
     IO.inspect(search_params, label: "Search terms")
     posts = Posts.search(search_params)
+    IO.inspect(posts)
     render(conn, :index, posts: posts, search_params: search_params)
   end
 
   def index(conn, _params) do
+    IO.inspect("I am here!!")
     posts = Posts.list_posts()
     render(conn, :index, posts: posts, search_params: nil)
   end
