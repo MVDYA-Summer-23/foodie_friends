@@ -57,5 +57,19 @@ defmodule FoodieFriends.PostsTest do
       post = post_fixture()
       assert %Ecto.Changeset{} = Posts.change_post(post)
     end
+
+    test "search/1 pulls the post based off of input" do
+      post = post_fixture(title: "burger")
+      post1 = post_fixture(title: "ice-cream")
+      post2 = post_fixture(title: "bacon cheeseburger")
+
+      assert Posts.search("burger") == [post, post2]
+      assert Posts.search("Bur") == [post, post2]
+      assert Posts.search("BuRger") == [post, post2]
+      assert Posts.search("Bur") == [post, post2]
+      assert Posts.search("BURGER") == [post, post2]
+      assert Posts.search("") == [post, post1, post2]
+      refute Posts.search("burger") == [post1]
+    end
   end
 end

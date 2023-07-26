@@ -7,6 +7,16 @@
   </:actions>
 </.header>
 
+<%= if @search_params do %>
+<h1>Search Results for "<%=@search_params%>"</h1> 
+<%end%>
+
+<form action="/posts" method="get">
+  <input type="text" name="q" placeholder="Search for blog posts">
+  <button type="submit">Search</button>
+</form>
+
+
 <.table id="posts" rows={@posts} row_click={&JS.navigate(~p"/posts/#{&1}")}>
   <:col :let={post} label="Title"><%= post.title %></:col>
   <:col :let={post} label="Content"><%= post.content %></:col>

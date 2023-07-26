@@ -4,13 +4,35 @@ defmodule FoodieFriendsWeb.PostControllerTest do
   import FoodieFriends.PostsFixtures
 
   @create_attrs %{content: "some content", subtitle: "some subtitle", title: "some title"}
-  @update_attrs %{content: "some updated content", subtitle: "some updated subtitle", title: "some updated title"}
+  @update_attrs %{
+    content: "some updated content",
+    subtitle: "some updated subtitle",
+    title: "some updated title"
+  }
   @invalid_attrs %{content: nil, subtitle: nil, title: nil}
 
   describe "index" do
     test "lists all posts", %{conn: conn} do
       conn = get(conn, ~p"/posts")
       assert html_response(conn, 200) =~ "Listing Posts"
+    end
+
+    test "search for posts - non-matching", %{conn: conn} do
+      post = post_fixture(q: "some title")
+      conn = get(conn, ~p"/posts", q: "Non-Matching")
+      refute html_response(conn, 200) =~ post.title
+    end
+
+    test "search for posts - partial match", %{conn: conn} do
+      post = post_fixture(q: "some title")
+      conn = get(conn, ~p"/posts", q: "itl")
+      assert html_response(conn, 200) =~ post.title
+    end
+
+    test "search for posts - exact match", %{conn: conn} do
+      post = post_fixture(q: "some title")
+      conn = get(conn, ~p"/posts", q: "some title")
+      assert html_response(conn, 200) =~ post.title
     end
   end
 
@@ -71,9 +93,9 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       conn = delete(conn, ~p"/posts/#{post}")
       assert redirected_to(conn) == ~p"/posts"
 
-      assert_error_sent 404, fn ->
+      assert_error_sent(404, fn ->
         get(conn, ~p"/posts/#{post}")
-      end
+      end)
     end
   end
 
