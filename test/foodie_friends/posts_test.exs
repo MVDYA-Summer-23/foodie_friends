@@ -21,11 +21,25 @@ defmodule FoodieFriends.PostsTest do
     end
 
     test "create_post/1 with valid data creates a post" do
-      valid_attrs = %{content: "some content", subtitle: "some subtitle", title: "some title"}
+      now = DateTime.utc_now()
+      valid_attrs = %{content: "some content", title: "some title", published_on: now}
 
       assert {:ok, %Post{} = post} = Posts.create_post(valid_attrs)
       assert post.content == "some content"
       assert post.title == "some title"
+      assert DateTime.to_unix(post.published_on) == DateTime.to_unix(now)
+    end
+
+    test "create_post/1 uses the appropriate datetime for the published_on field" do
+      valid_attrs = %{
+        "content" => "I want mexican food",
+        "published_on" => "2023-07-26T20:41",
+        "title" => "New title",
+        "visible" => "false"
+      }
+
+      assert {:ok, %Post{} = post} = Posts.create_post(valid_attrs)
+      assert post.published_on == ~U[2023-07-26 20:41:00Z]
     end
 
     test "create_post/1 with invalid data returns error changeset" do
@@ -34,7 +48,12 @@ defmodule FoodieFriends.PostsTest do
 
     test "update_post/2 with valid data updates the post" do
       post = post_fixture()
-      update_attrs = %{content: "some updated content", subtitle: "some updated subtitle", title: "some updated title"}
+
+      update_attrs = %{
+        content: "some updated content",
+        subtitle: "some updated subtitle",
+        title: "some updated title"
+      }
 
       assert {:ok, %Post{} = post} = Posts.update_post(post, update_attrs)
       assert post.content == "some updated content"

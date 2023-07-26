@@ -12,8 +12,8 @@ defmodule FoodieFriends.PostsFixtures do
       attrs
       |> Enum.into(%{
         content: "some content",
-        subtitle: "some subtitle",
-        title: "some title"
+        title: "some title",
+        published_on: DateTime.utc_now()
       })
       |> FoodieFriends.Posts.create_post()
 

@@ -4,7 +4,7 @@ defmodule FoodieFriends.Posts.Post do
 
   schema "posts" do
     field :content, :string
-    field :published_on, :date
+    field :published_on, :utc_datetime
     field :title, :string
     field :visible, :boolean, default: true
 

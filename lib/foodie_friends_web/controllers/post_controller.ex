@@ -5,14 +5,11 @@ defmodule FoodieFriendsWeb.PostController do
   alias FoodieFriends.Posts.Post
 
   def index(conn, %{"q" => search_params}) do
-    IO.inspect(search_params, label: "Search terms")
     posts = Posts.search(search_params)
-    IO.inspect(posts)
     render(conn, :index, posts: posts, search_params: search_params)
   end
 
   def index(conn, _params) do
-    IO.inspect("I am here!!")
     posts = Posts.list_posts()
     render(conn, :index, posts: posts, search_params: nil)
   end
@@ -23,6 +20,7 @@ defmodule FoodieFriendsWeb.PostController do
   end
 
   def create(conn, %{"post" => post_params}) do
+    IO.inspect(post_params, label: "post_params")
     case Posts.create_post(post_params) do
       {:ok, post} ->
         conn

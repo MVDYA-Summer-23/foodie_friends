@@ -3,7 +3,7 @@ defmodule FoodieFriends.Repo.Migrations.CustomizePosts do
 
   def change do
     alter table(:posts) do
-      add :published_on, :date
+      add :published_on, :utc_datetime
       add :visible, :boolean, default: true
 
       remove :subtitle
