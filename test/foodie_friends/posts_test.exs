@@ -25,7 +25,6 @@ defmodule FoodieFriends.PostsTest do
 
       assert {:ok, %Post{} = post} = Posts.create_post(valid_attrs)
       assert post.content == "some content"
-      assert post.subtitle == "some subtitle"
       assert post.title == "some title"
     end
 
@@ -39,7 +38,6 @@ defmodule FoodieFriends.PostsTest do
 
       assert {:ok, %Post{} = post} = Posts.update_post(post, update_attrs)
       assert post.content == "some updated content"
-      assert post.subtitle == "some updated subtitle"
       assert post.title == "some updated title"
     end
 
