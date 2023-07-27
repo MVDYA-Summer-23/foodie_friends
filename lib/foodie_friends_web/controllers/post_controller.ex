@@ -20,7 +20,7 @@ defmodule FoodieFriendsWeb.PostController do
   end
 
   def create(conn, %{"post" => post_params}) do
-    IO.inspect(post_params, label: "post_params")
+    # IO.inspect(post_params, label: "post_params")
     case Posts.create_post(post_params) do
       {:ok, post} ->
         conn

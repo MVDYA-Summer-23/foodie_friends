@@ -13,7 +13,8 @@ defmodule FoodieFriends.PostsFixtures do
       |> Enum.into(%{
         content: "some content",
         title: "some title",
-        published_on: DateTime.utc_now()
+        published_on: DateTime.utc_now(),
+        visible: true
       })
       |> FoodieFriends.Posts.create_post()
 

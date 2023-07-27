@@ -15,6 +15,39 @@ defmodule FoodieFriends.PostsTest do
       assert Posts.list_posts() == [post]
     end
 
+    test "list_posts/0 returns all posts by newest to oldest" do
+      newest_post = post_fixture()
+      {:ok, oldest_post} = %{
+        content: "some other content",
+        title: "another title",
+        published_on: DateTime.utc_now() |> DateTime.add(-1, :day),
+        visible: true
+      } |> Posts.create_post()
+      assert Posts.list_posts() == [newest_post, oldest_post]
+    end
+
+    test "list_posts/0 returns only visible posts" do
+      post = post_fixture()
+      {:ok, _invisible_post} = %{
+        content: "some other content",
+        title: "invisible title",
+        published_on: DateTime.utc_now(),
+        visible: false
+      } |> Posts.create_post()
+      assert Posts.list_posts() == [post]
+    end
+
+    test "list_posts/0 returns only posts published before now (date/time)" do
+      post = post_fixture()
+      {:ok, _future_post} = %{
+        content: "future post content",
+        title: "future post title",
+        published_on: DateTime.utc_now() |> DateTime.add(1, :day),
+        visible: true
+      } |> Posts.create_post()
+      assert Posts.list_posts() == [post]
+    end
+
     test "get_post!/1 returns the post with given id" do
       post = post_fixture()
       assert Posts.get_post!(post.id) == post

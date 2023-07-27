@@ -16,6 +16,22 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       assert html_response(conn, 200) =~ "Listing Posts"
     end
 
+    test "lists visible posts only", %{conn: conn} do
+      post = post_fixture()
+
+      invisible_post =
+        %{
+          content: "some content",
+          title: "invisible",
+          published_on: DateTime.utc_now(),
+          visible: false
+        }
+        |> FoodieFriends.Posts.create_post()
+
+      conn = get(conn, ~p"/posts")
+      refute html_response(conn, 200) =~ "invisible"
+    end
+
     test "search for posts - non-matching", %{conn: conn} do
       post = post_fixture(q: "some title")
       conn = get(conn, ~p"/posts", q: "Non-Matching")

@@ -18,14 +18,15 @@ defmodule FoodieFriends.Posts do
 
   """
   def list_posts do
-    Repo.all(Post)
+    from(p in Post, where: p.visible and p.published_on <= ^DateTime.utc_now(), order_by: [desc: p.published_on])
+    |> Repo.all()
   end
 
   def search(search_params) do
     query =
       if String.trim(search_params) == "" do
         # If the search term is empty, return all posts
-        from p in Post, order_by: [desc: p.published_on]
+        from p in Post, where: p.visible, order_by: [desc: p.published_on]
       else
         # Perform the search based on the post title or content
         from p in Post,
