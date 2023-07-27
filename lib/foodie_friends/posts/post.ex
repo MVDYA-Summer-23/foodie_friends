@@ -4,8 +4,9 @@ defmodule FoodieFriends.Posts.Post do
 
   schema "posts" do
     field :content, :string
-    field :subtitle, :string
+    field :published_on, :utc_datetime
     field :title, :string
+    field :visible, :boolean, default: true
 
     timestamps()
   end
@@ -13,7 +14,8 @@ defmodule FoodieFriends.Posts.Post do
   @doc false
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:title, :subtitle, :content])
-    |> validate_required([:title, :subtitle, :content])
+    |> cast(attrs, [:title, :published_on, :content])
+    |> validate_required([:title, :published_on, :content])
+    |> unique_constraint(:title)
   end
 end
