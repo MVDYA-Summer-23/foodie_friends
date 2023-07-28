@@ -32,7 +32,7 @@
   </div>
 <% end %> --%>
 
-<%!-- <.table id="posts" rows={@post.comments}>
+<.table id="posts" rows={@post.comments}>
   <:col :let={comment} label="Comments">
     <span id={"comment-content-#{comment.id}"}>
       <%= comment.content %>
@@ -66,6 +66,6 @@
       </.link>
     <% end %>
   </:action>
-</.table> --%>
+</.table>
 
 <.back navigate={~p"/posts"}>Back to posts</.back>
