@@ -3,18 +3,33 @@ defmodule FoodieFriendsWeb.PostControllerTest do
 
   import FoodieFriends.PostsFixtures
 
-  @create_attrs %{content: "some content", subtitle: "some subtitle", title: "some title"}
+  @create_attrs %{content: "some content", published_on: DateTime.utc_now(), title: "some title"}
   @update_attrs %{
     content: "some updated content",
-    subtitle: "some updated subtitle",
     title: "some updated title"
   }
-  @invalid_attrs %{content: nil, subtitle: nil, title: nil}
+  @invalid_attrs %{content: nil, published_on: nil, title: nil}
 
   describe "index" do
     test "lists all posts", %{conn: conn} do
       conn = get(conn, ~p"/posts")
       assert html_response(conn, 200) =~ "Listing Posts"
+    end
+
+    test "lists visible posts only", %{conn: conn} do
+      post = post_fixture()
+
+      invisible_post =
+        %{
+          content: "some content",
+          title: "invisible",
+          published_on: DateTime.utc_now(),
+          visible: false
+        }
+        |> FoodieFriends.Posts.create_post()
+
+      conn = get(conn, ~p"/posts")
+      refute html_response(conn, 200) =~ "invisible"
     end
 
     test "search for posts - non-matching", %{conn: conn} do

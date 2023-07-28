@@ -14,8 +14,8 @@ defmodule FoodieFriends.Posts.Post do
   @doc false
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:title, :published_on, :content])
-    |> validate_required([:title, :published_on, :content])
+    |> cast(attrs, [:title, :visible, :published_on, :content])
+    |> validate_required([:title, :visible, :published_on, :content])
     |> unique_constraint(:title)
   end
 end
