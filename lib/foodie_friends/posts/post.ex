@@ -7,6 +7,7 @@ defmodule FoodieFriends.Posts.Post do
     field :published_on, :utc_datetime
     field :title, :string
     field :visible, :boolean, default: true
+    has_many :comments, FoodieFriends.Comments.Comment
 
     timestamps()
   end

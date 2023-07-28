@@ -3,6 +3,8 @@ defmodule FoodieFriendsWeb.PostController do
 
   alias FoodieFriends.Posts
   alias FoodieFriends.Posts.Post
+  alias FoodieFriends.Comments.Comment
+  alias FoodieFriends.Comments
 
   def index(conn, %{"q" => search_params}) do
     posts = Posts.search(search_params)
@@ -34,7 +36,8 @@ defmodule FoodieFriendsWeb.PostController do
 
   def show(conn, %{"id" => id}) do
     post = Posts.get_post!(id)
-    render(conn, :show, post: post)
+    comment_changeset = Comments.change_comment(%Comment{})
+    render(conn, :show, post: post, comment_changeset: comment_changeset)
   end
 
   def edit(conn, %{"id" => id}) do
