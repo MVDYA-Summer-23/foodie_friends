@@ -5,11 +5,6 @@ defmodule FoodieFriendsWeb.CommentController do
   alias FoodieFriends.Comments.Comment
   alias FoodieFriends.Posts
 
-  # def index(conn, _params) do
-  #   comments = Comments.list_comments()
-  #   render(conn, :index, comments: comments)
-  # end
-
   def new(conn, _params) do
     changeset = Comments.change_comment(%Comment{})
     render(conn, :new, changeset: changeset)
@@ -28,11 +23,6 @@ defmodule FoodieFriendsWeb.CommentController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    comment = Comments.get_comment!(id)
-    render(conn, :show, comment: comment)
-  end
-
   def edit(conn, %{"id" => id}) do
     comment = Comments.get_comment!(id)
     changeset = Comments.change_comment(comment)
@@ -46,10 +36,12 @@ defmodule FoodieFriendsWeb.CommentController do
       {:ok, comment} ->
         conn
         |> put_flash(:info, "Comment updated successfully.")
-        |> redirect(to: ~p"/comments/#{comment}")
+        |> redirect(to: ~p"/posts/#{comment.post_id}")
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, :edit, comment: comment, changeset: changeset)
+      {:error, %Ecto.Changeset{}} ->
+        conn
+        |> put_flash(:info, "Something went wrong, comment could not be created.")
+        |> redirect(to: ~p"/posts/#{comment.post_id}")
     end
   end
 
@@ -59,6 +51,6 @@ defmodule FoodieFriendsWeb.CommentController do
 
     conn
     |> put_flash(:info, "Comment deleted successfully.")
-    |> redirect(to: ~p"/comments")
+    |> redirect(to: ~p"/posts/#{comment.post_id}")
   end
 end

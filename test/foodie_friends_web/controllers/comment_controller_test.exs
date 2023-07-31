@@ -4,21 +4,21 @@ defmodule FoodieFriendsWeb.CommentControllerTest do
   import FoodieFriends.CommentsFixtures
   import FoodieFriends.PostsFixtures
 
-  @create_attrs %{}
+  @create_attrs %{content: "some created comment content"}
   @update_attrs %{content: "some updated comment content"}
   @invalid_attrs %{}
 
   describe "create comment" do
     test "redirects to associated post page when data is valid", %{conn: conn} do
       post = post_fixture()
-      create_attrs = %{content: "some comment content", post_id: post.id}
+      create_attrs = Map.merge(@create_attrs, %{post_id: post.id})
       conn = post(conn, ~p"/comments", comment: create_attrs)
 
       assert %{id: id} = redirected_params(conn)
       assert redirected_to(conn) == ~p"/posts/#{id}"
 
       conn = get(conn, ~p"/posts/#{id}")
-      assert html_response(conn, 200) =~ "some comment content"
+      assert html_response(conn, 200) =~ "some created comment content"
     end
 
     # test "renders errors when data is invalid", %{conn: conn} do
@@ -41,8 +41,7 @@ defmodule FoodieFriendsWeb.CommentControllerTest do
     test "redirects when data is valid", %{conn: conn} do
       post = post_fixture()
       comment = comment_fixture(post_id: post.id)
-      update_attrs = %{content: "some updated comment content", post_id: post.id}
-      conn = put(conn, ~p"/comments/#{comment}", comment: update_attrs)
+      conn = put(conn, ~p"/comments/#{comment}", comment: @update_attrs)
 
       assert redirected_to(conn) == ~p"/posts/#{post.id}"
 
@@ -50,11 +49,15 @@ defmodule FoodieFriendsWeb.CommentControllerTest do
       assert html_response(conn, 200)
     end
 
-    test "renders errors when data is invalid", %{conn: conn} do
+    # TODO: is it possible to also check that errors were rendered?
+    test "redirects to post when new comment is invalid", %{conn: conn} do
+      # test "renders errors when data is invalid", %{conn: conn} do
       post = post_fixture()
       comment = comment_fixture(post_id: post.id)
       conn = put(conn, ~p"/comments/#{comment}", comment: @invalid_attrs)
-      assert html_response(conn, 200) =~ "Edit Comment"
+      # Added assert redirection to comply with expected behavior
+      assert redirected_to(conn) == ~p"/posts/#{comment.post_id}"
+      # assert html_response(conn, 200) =~ "Edit Comment"
     end
   end
 
@@ -63,16 +66,7 @@ defmodule FoodieFriendsWeb.CommentControllerTest do
       post = post_fixture()
       comment = comment_fixture(post_id: post.id)
       conn = delete(conn, ~p"/comments/#{comment}")
-      assert redirected_to(conn) == ~p"/comments"
-
-      assert_error_sent(404, fn ->
-        get(conn, ~p"/comments/#{comment}")
-      end)
+      assert redirected_to(conn) == ~p"/posts/#{comment.post_id}"
     end
-  end
-
-  defp create_comment(_) do
-    comment = comment_fixture()
-    %{comment: comment}
   end
 end

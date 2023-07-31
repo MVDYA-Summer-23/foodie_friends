@@ -11,10 +11,10 @@ defmodule FoodieFriends.PostsFixtures do
     {:ok, post} =
       attrs
       |> Enum.into(%{
-        content: "some content",
-        title: "some title",
-        published_on: DateTime.utc_now(),
-        visible: true
+        title: "some post title",
+        content: "some post content",
+        visible: true,
+        published_on: DateTime.utc_now()
       })
       |> FoodieFriends.Posts.create_post()
 

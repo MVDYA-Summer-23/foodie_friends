@@ -6,6 +6,7 @@ defmodule FoodieFriends.Posts do
   import Ecto.Query, warn: false
   alias FoodieFriends.Repo
 
+  alias FoodieFriends.Comments.Comment
   alias FoodieFriends.Posts.Post
 
   @doc """
@@ -18,7 +19,10 @@ defmodule FoodieFriends.Posts do
 
   """
   def list_posts do
-    from(p in Post, where: p.visible and p.published_on <= ^DateTime.utc_now(), order_by: [desc: p.published_on])
+    from(p in Post,
+      where: p.visible and p.published_on <= ^DateTime.utc_now(),
+      order_by: [desc: p.published_on]
+    )
     |> Repo.all()
   end
 
@@ -26,16 +30,17 @@ defmodule FoodieFriends.Posts do
     query =
       if String.trim(search_params) == "" do
         # If the search term is empty, return all posts
-        from p in Post, where: p.visible, order_by: [desc: p.published_on]
+        from(p in Post, where: p.visible, order_by: [desc: p.published_on])
       else
         # Perform the search based on the post title or content
-        from p in Post,
+        from(p in Post,
           where: p.visible,
           where: ilike(p.title, ^"%#{search_params}%") or ilike(p.content, ^"%#{search_params}%"),
           order_by: [desc: p.published_on]
+        )
       end
 
-    posts = Repo.all(query)
+    Repo.all(query)
   end
 
   @doc """
@@ -52,7 +57,13 @@ defmodule FoodieFriends.Posts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_post!(id), do: Repo.get!(Post, id)
+  def get_post!(id) do
+    comments_query = from(c in Comment, order_by: [desc: c.inserted_at, desc: c.id])
+
+    post_query = from(p in Post, preload: [comments: ^comments_query])
+
+    Repo.get!(post_query, id)
+  end
 
   @doc """
   Creates a post.
@@ -86,6 +97,7 @@ defmodule FoodieFriends.Posts do
   """
   def update_post(%Post{} = post, attrs) do
     post
+    |> Repo.preload(:comments)
     |> Post.changeset(attrs)
     |> Repo.update()
   end

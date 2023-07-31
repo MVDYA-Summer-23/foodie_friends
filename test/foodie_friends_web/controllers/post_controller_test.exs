@@ -3,7 +3,11 @@ defmodule FoodieFriendsWeb.PostControllerTest do
 
   import FoodieFriends.PostsFixtures
 
-  @create_attrs %{content: "some content", published_on: DateTime.utc_now(), title: "some title"}
+  @create_attrs %{
+    content: "some created content",
+    published_on: DateTime.utc_now(),
+    title: "some created title"
+  }
   @update_attrs %{
     content: "some updated content",
     title: "some updated title"
@@ -17,9 +21,9 @@ defmodule FoodieFriendsWeb.PostControllerTest do
     end
 
     test "lists visible posts only", %{conn: conn} do
-      post = post_fixture()
+      _post = post_fixture()
 
-      invisible_post =
+      {:ok, _invisible_post} =
         %{
           content: "some content",
           title: "invisible",
@@ -33,20 +37,20 @@ defmodule FoodieFriendsWeb.PostControllerTest do
     end
 
     test "search for posts - non-matching", %{conn: conn} do
-      post = post_fixture(q: "some title")
+      post = post_fixture(q: "some post title")
       conn = get(conn, ~p"/posts", q: "Non-Matching")
       refute html_response(conn, 200) =~ post.title
     end
 
     test "search for posts - partial match", %{conn: conn} do
-      post = post_fixture(q: "some title")
+      post = post_fixture(q: "some post title")
       conn = get(conn, ~p"/posts", q: "itl")
       assert html_response(conn, 200) =~ post.title
     end
 
     test "search for posts - exact match", %{conn: conn} do
-      post = post_fixture(q: "some title")
-      conn = get(conn, ~p"/posts", q: "some title")
+      post = post_fixture(q: "some post title")
+      conn = get(conn, ~p"/posts", q: "some post title")
       assert html_response(conn, 200) =~ post.title
     end
   end
