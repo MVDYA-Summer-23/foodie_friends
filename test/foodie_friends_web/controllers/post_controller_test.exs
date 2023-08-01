@@ -2,6 +2,7 @@ defmodule FoodieFriendsWeb.PostControllerTest do
   use FoodieFriendsWeb.ConnCase
 
   import FoodieFriends.PostsFixtures
+  import FoodieFriends.AccountsFixtures
 
   @create_attrs %{
     content: "some created content",
@@ -21,14 +22,16 @@ defmodule FoodieFriendsWeb.PostControllerTest do
     end
 
     test "lists visible posts only", %{conn: conn} do
-      _post = post_fixture()
+      user = user_fixture()
+      _post = post_fixture(user_id: user.id)
 
       {:ok, _invisible_post} =
         %{
           content: "some content",
           title: "invisible",
           published_on: DateTime.utc_now(),
-          visible: false
+          visible: false,
+          user_id: user.id
         }
         |> FoodieFriends.Posts.create_post()
 
@@ -37,19 +40,22 @@ defmodule FoodieFriendsWeb.PostControllerTest do
     end
 
     test "search for posts - non-matching", %{conn: conn} do
-      post = post_fixture(q: "some post title")
+      user = user_fixture()
+      post = post_fixture(q: "some post title", user_id: user.id)
       conn = get(conn, ~p"/posts", q: "Non-Matching")
       refute html_response(conn, 200) =~ post.title
     end
 
     test "search for posts - partial match", %{conn: conn} do
-      post = post_fixture(q: "some post title")
+      user = user_fixture()
+      post = post_fixture(q: "some post title", user_id: user.id)
       conn = get(conn, ~p"/posts", q: "itl")
       assert html_response(conn, 200) =~ post.title
     end
 
     test "search for posts - exact match", %{conn: conn} do
-      post = post_fixture(q: "some post title")
+      user = user_fixture()
+      post = post_fixture(q: "some post title", user_id: user.id)
       conn = get(conn, ~p"/posts", q: "some post title")
       assert html_response(conn, 200) =~ post.title
     end
@@ -64,7 +70,8 @@ defmodule FoodieFriendsWeb.PostControllerTest do
 
   describe "create post" do
     test "redirects to show when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/posts", post: @create_attrs)
+      created_post = Map.put(@create_attrs, :user_id, user_fixture().id)
+      conn = post(conn, ~p"/posts", post: created_post)
 
       assert %{id: id} = redirected_params(conn)
       assert redirected_to(conn) == ~p"/posts/#{id}"
@@ -80,46 +87,58 @@ defmodule FoodieFriendsWeb.PostControllerTest do
   end
 
   describe "edit post" do
-    setup [:create_post]
-
-    test "renders form for editing chosen post", %{conn: conn, post: post} do
+    test "renders form for editing chosen post", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
       conn = get(conn, ~p"/posts/#{post}/edit")
       assert html_response(conn, 200) =~ "Edit Post"
     end
   end
 
   describe "update post" do
-    setup [:create_post]
-
-    test "redirects when data is valid", %{conn: conn, post: post} do
-      conn = put(conn, ~p"/posts/#{post}", post: @update_attrs)
+    test "redirects when data is valid", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      updated_post = Map.put(@update_attrs, :user_id, user.id)
+      conn = put(conn, ~p"/posts/#{post}", post: updated_post)
       assert redirected_to(conn) == ~p"/posts/#{post}"
 
       conn = get(conn, ~p"/posts/#{post}")
       assert html_response(conn, 200) =~ "some updated content"
     end
 
-    test "renders errors when data is invalid", %{conn: conn, post: post} do
-      conn = put(conn, ~p"/posts/#{post}", post: @invalid_attrs)
+    test "renders errors when data is invalid", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      invalid_post = Map.put(@invalid_attrs, :user_id, user.id)
+      conn = put(conn, ~p"/posts/#{post}", post: invalid_post)
       assert html_response(conn, 200) =~ "Edit Post"
     end
   end
 
   describe "delete post" do
-    setup [:create_post]
-
-    test "deletes chosen post", %{conn: conn, post: post} do
-      conn = delete(conn, ~p"/posts/#{post}")
+    test "deletes chosen post", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      conn = conn |> log_in_user(user) |> delete(~p"/posts/#{post}")
       assert redirected_to(conn) == ~p"/posts"
 
       assert_error_sent(404, fn ->
         get(conn, ~p"/posts/#{post}")
       end)
     end
-  end
 
-  defp create_post(_) do
-    post = post_fixture()
-    %{post: post}
+    test "a user cannot delete another user's post", %{conn: conn} do
+      post_user = user_fixture()
+      other_user = user_fixture()
+      post = post_fixture(user_id: post_user.id)
+      conn = conn |> log_in_user(other_user) |> delete(~p"/posts/#{post}")
+      # assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+      #          "You can only edit or delete your own posts."
+
+      # TODO: ASK if unauthorized post deletion requests should redirect to Post index page or to the corresponding Post instead.
+      # assert redirected_to(conn) == ~p"/posts/#{post}"
+      assert redirected_to(conn) == ~p"/posts"
+    end
   end
 end

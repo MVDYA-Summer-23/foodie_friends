@@ -8,9 +8,8 @@ defmodule FoodieFriends.Posts.Post do
     field :visible, :boolean, default: true
     field :published_on, :utc_datetime
 
-    has_many :comments, FoodieFriends.Comments.Comment
-
     belongs_to :user, FoodieFriends.Accounts.User
+    has_many :comments, FoodieFriends.Comments.Comment
 
     timestamps()
   end

@@ -7,23 +7,27 @@ defmodule FoodieFriends.PostsTest do
     alias FoodieFriends.Posts.Post
 
     import FoodieFriends.PostsFixtures
+    import FoodieFriends.AccountsFixtures
 
     @invalid_attrs %{content: nil, subtitle: nil, title: nil}
 
     test "list_posts/0 returns all posts" do
-      post = post_fixture()
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
       assert Posts.list_posts() == [post]
     end
 
     test "list_posts/0 returns all posts by newest to oldest" do
-      newest_post = post_fixture()
+      user = user_fixture()
+      newest_post = post_fixture(user_id: user.id)
 
       {:ok, oldest_post} =
         %{
           content: "some other content",
           title: "another title",
           published_on: DateTime.utc_now() |> DateTime.add(-1, :day),
-          visible: true
+          visible: true,
+          user_id: user.id
         }
         |> Posts.create_post()
 
@@ -31,14 +35,16 @@ defmodule FoodieFriends.PostsTest do
     end
 
     test "list_posts/0 returns only visible posts" do
-      post = post_fixture()
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
 
       {:ok, _invisible_post} =
         %{
           content: "some other content",
           title: "invisible title",
           published_on: DateTime.utc_now(),
-          visible: false
+          visible: false,
+          user_id: user.id
         }
         |> Posts.create_post()
 
@@ -46,14 +52,16 @@ defmodule FoodieFriends.PostsTest do
     end
 
     test "list_posts/0 returns only posts published before now (date/time)" do
-      post = post_fixture()
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
 
       {:ok, _future_post} =
         %{
           content: "future post content",
           title: "future post title",
           published_on: DateTime.utc_now() |> DateTime.add(1, :day),
-          visible: true
+          visible: true,
+          user_id: user.id
         }
         |> Posts.create_post()
 
@@ -61,15 +69,20 @@ defmodule FoodieFriends.PostsTest do
     end
 
     test "get_post!/1 returns the post with given id" do
-      # TODO: Ask what the right approach is. Getting a post should preload its comments. But the Ecto struct returned from a Post insertion has no comments. Hmmm.
-      post = post_fixture() |> Map.put(:comments, [])
-      assert Posts.get_post!(post.id) == post
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      # post = post_fixture(user_id: user.id) |> Map.put(comments, [])
+      fetched_post = Posts.get_post!(post.id)
+      assert Map.delete(fetched_post, :comments) == Map.delete(post, :comments)
     end
+
+    # TODO: create test "get_post!/1 returns the post with given id and comments"
 
     test "create_post/1 with valid data creates a post" do
       now = DateTime.utc_now()
-
+      user = user_fixture()
       valid_attrs = %{
+        user_id: user.id,
         content: "some created content",
         title: "some created title",
         published_on: now
@@ -82,11 +95,14 @@ defmodule FoodieFriends.PostsTest do
     end
 
     test "create_post/1 uses the appropriate datetime for the published_on field" do
+      user = user_fixture()
+
       valid_attrs = %{
         "content" => "I want mexican food",
         "published_on" => "2023-07-26T20:41",
         "title" => "New title",
-        "visible" => "false"
+        "visible" => "false",
+        "user_id" => "#{user.id}"
       }
 
       assert {:ok, %Post{} = post} = Posts.create_post(valid_attrs)
@@ -98,7 +114,8 @@ defmodule FoodieFriends.PostsTest do
     end
 
     test "update_post/2 with valid data updates the post" do
-      post = post_fixture()
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
 
       update_attrs = %{
         content: "some updated content",
@@ -112,30 +129,33 @@ defmodule FoodieFriends.PostsTest do
     end
 
     test "update_post/2 with invalid data returns error changeset" do
-      post = post_fixture()
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
       assert {:error, %Ecto.Changeset{}} = Posts.update_post(post, @invalid_attrs)
     end
 
     test "delete_post/1 deletes the post" do
-      post = post_fixture()
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
       assert {:ok, %Post{}} = Posts.delete_post(post)
       assert_raise Ecto.NoResultsError, fn -> Posts.get_post!(post.id) end
     end
 
     test "change_post/1 returns a post changeset" do
-      post = post_fixture()
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
       assert %Ecto.Changeset{} = Posts.change_post(post)
     end
 
     test "search/1 pulls the post based off of input" do
-      post = post_fixture(title: "burger")
-      post1 = post_fixture(title: "ice-cream")
-      post2 = post_fixture(title: "bacon cheeseburger")
+      user = user_fixture()
+      post = post_fixture(title: "burger", user_id: user.id)
+      post1 = post_fixture(title: "ice-cream", user_id: user.id)
+      post2 = post_fixture(title: "bacon cheeseburger", user_id: user.id)
 
       assert Posts.search("burger") == [post, post2]
       assert Posts.search("Bur") == [post, post2]
       assert Posts.search("BuRger") == [post, post2]
-      assert Posts.search("Bur") == [post, post2]
       assert Posts.search("BURGER") == [post, post2]
       assert Posts.search("") == [post, post1, post2]
       refute Posts.search("burger") == [post1]
