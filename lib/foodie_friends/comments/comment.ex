@@ -5,6 +5,7 @@ defmodule FoodieFriends.Comments.Comment do
   schema "comments" do
     field(:content, :string)
     belongs_to(:post, FoodieFriends.Posts.Post)
+    belongs_to(:user, FoodieFriends.Accounts.User)
 
     timestamps()
   end
@@ -13,8 +14,9 @@ defmodule FoodieFriends.Comments.Comment do
   def changeset(comment, attrs) do
     comment
     # |> IO.inspect()
-    |> cast(attrs, [:content, :post_id])
-    |> validate_required([:content, :post_id])
+    |> cast(attrs, [:content, :post_id, :user_id])
+    |> validate_required([:content, :post_id, :user_id])
     |> foreign_key_constraint(:post_id)
+    |> foreign_key_constraint(:user_id)
   end
 end
