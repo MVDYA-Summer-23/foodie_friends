@@ -2,6 +2,7 @@ defmodule FoodieFriendsWeb.PostControllerTest do
   use FoodieFriendsWeb.ConnCase
 
   import FoodieFriends.PostsFixtures
+  import FoodieFriends.CommentsFixtures
   import FoodieFriends.AccountsFixtures
 
   @create_attrs %{
@@ -62,16 +63,23 @@ defmodule FoodieFriendsWeb.PostControllerTest do
   end
 
   describe "new post" do
-    test "renders form", %{conn: conn} do
-      conn = get(conn, ~p"/posts/new")
+    test "renders form only for logged in users", %{conn: conn} do
+      user = user_fixture()
+      conn = conn |> log_in_user(user) |> get(~p"/posts/new")
       assert html_response(conn, 200) =~ "New Post"
+    end
+
+    test "redirects to login if not logged in", %{conn: conn} do
+      conn = get(conn, ~p"/posts/new")
+      assert redirected_to(conn) == ~p"/users/log_in"
     end
   end
 
   describe "create post" do
     test "redirects to show when data is valid", %{conn: conn} do
-      created_post = Map.put(@create_attrs, :user_id, user_fixture().id)
-      conn = post(conn, ~p"/posts", post: created_post)
+      user = user_fixture()
+      created_post = Map.put(@create_attrs, :user_id, user.id)
+      conn = conn |> log_in_user(user) |> post(~p"/posts", post: created_post)
 
       assert %{id: id} = redirected_params(conn)
       assert redirected_to(conn) == ~p"/posts/#{id}"
@@ -81,17 +89,37 @@ defmodule FoodieFriendsWeb.PostControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/posts", post: @invalid_attrs)
+      user = user_fixture()
+      invalid_post = Map.put(@invalid_attrs, :user_id, user.id)
+      conn = conn |> log_in_user(user) |> post(~p"/posts", post: invalid_post)
       assert html_response(conn, 200) =~ "New Post"
+    end
+
+    test "redirects to login if not logged in", %{conn: conn} do
+      conn = post(conn, ~p"/posts", post: @create_attrs)
+      assert redirected_to(conn) == ~p"/users/log_in"
     end
   end
 
   describe "edit post" do
-    test "renders form for editing chosen post", %{conn: conn} do
+    test "renders form for editing chosen post only when its owner tries to edit it", %{
+      conn: conn
+    } do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
-      conn = get(conn, ~p"/posts/#{post}/edit")
+
+      conn = conn |> log_in_user(user) |> get(~p"/posts/#{post}/edit")
       assert html_response(conn, 200) =~ "Edit Post"
+    end
+
+    test "redirects to login if anyone tries to edit a post and they're not logged in", %{
+      conn: conn
+    } do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+
+      conn = get(conn, ~p"/posts/#{post}/edit")
+      assert redirected_to(conn) == ~p"/users/log_in"
     end
   end
 
@@ -100,7 +128,7 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
       updated_post = Map.put(@update_attrs, :user_id, user.id)
-      conn = put(conn, ~p"/posts/#{post}", post: updated_post)
+      conn = conn |> log_in_user(user) |> put(~p"/posts/#{post}", post: updated_post)
       assert redirected_to(conn) == ~p"/posts/#{post}"
 
       conn = get(conn, ~p"/posts/#{post}")
@@ -111,8 +139,19 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
       invalid_post = Map.put(@invalid_attrs, :user_id, user.id)
-      conn = put(conn, ~p"/posts/#{post}", post: invalid_post)
+      conn = conn |> log_in_user(user) |> put(~p"/posts/#{post}", post: invalid_post)
       assert html_response(conn, 200) =~ "Edit Post"
+    end
+
+    test "redirects to login if anyone tries to update a post and they're not logged in", %{
+      conn: conn
+    } do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+
+      updated_post = Map.put(@update_attrs, :user_id, user.id)
+      conn = conn |> put(~p"/posts/#{post}", post: updated_post)
+      assert redirected_to(conn) == ~p"/users/log_in"
     end
   end
 
@@ -133,11 +172,10 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       other_user = user_fixture()
       post = post_fixture(user_id: post_user.id)
       conn = conn |> log_in_user(other_user) |> delete(~p"/posts/#{post}")
-      # assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-      #          "You can only edit or delete your own posts."
 
-      # TODO: ASK if unauthorized post deletion requests should redirect to Post index page or to the corresponding Post instead.
-      # assert redirected_to(conn) == ~p"/posts/#{post}"
+      # TODO: should we be testing flash messages too?
+      # assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "You can only edit or delete your own posts."
+
       assert redirected_to(conn) == ~p"/posts"
     end
   end
