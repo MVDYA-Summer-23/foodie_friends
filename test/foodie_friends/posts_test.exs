@@ -5,8 +5,10 @@ defmodule FoodieFriends.PostsTest do
 
   describe "posts" do
     alias FoodieFriends.Posts.Post
+    alias FoodieFriends.Comments.Comment
 
     import FoodieFriends.PostsFixtures
+    import FoodieFriends.CommentsFixtures
     import FoodieFriends.AccountsFixtures
 
     @invalid_attrs %{content: nil, subtitle: nil, title: nil}
@@ -68,19 +70,31 @@ defmodule FoodieFriends.PostsTest do
       assert Posts.list_posts() == [post]
     end
 
-    test "get_post!/1 returns the post with given id" do
+    test "get_post!/1 with a given post id returns the post, without regard for other preloaded fields" do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
-      # post = post_fixture(user_id: user.id) |> Map.put(comments, [])
       fetched_post = Posts.get_post!(post.id)
-      assert Map.delete(fetched_post, :comments) == Map.delete(post, :comments)
+      assert Map.delete(fetched_post, :comments) == Map.delete(fetched_post, :comments)
     end
 
-    # TODO: create test "get_post!/1 returns the post with given id and comments"
+    # TODO: create test "get_post!/1 returns the post with given, its author's username, and associated comments"
+    test "get_post!/1 returns the post with given id and comments" do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      comment = comment_fixture(post_id: post.id, user_id: user.id)
+
+      fetched_post = Posts.get_post!(post.id)
+
+      assert fetched_post.user == user
+      assert [fetched_comment] = fetched_post.comments
+      assert Map.delete(fetched_comment, :user) == Map.delete(comment, :user)
+      assert fetched_comment.user == user
+    end
 
     test "create_post/1 with valid data creates a post" do
       now = DateTime.utc_now()
       user = user_fixture()
+
       valid_attrs = %{
         user_id: user.id,
         content: "some created content",

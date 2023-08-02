@@ -7,6 +7,7 @@ defmodule FoodieFriendsWeb.PostHTML do
   Renders a post form.
   """
   attr :changeset, Ecto.Changeset, required: true
+  attr :current_user, :map, required: true
   attr :action, :string, required: true
 
   def post_form(assigns)

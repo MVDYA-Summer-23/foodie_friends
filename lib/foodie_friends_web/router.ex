@@ -18,10 +18,16 @@ defmodule FoodieFriendsWeb.Router do
   end
 
   scope "/", FoodieFriendsWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    resources "/posts", PostController, only: [:new, :edit, :update, :create, :delete]
+  end
+
+  scope "/", FoodieFriendsWeb do
     pipe_through :browser
 
     get "/", PageController, :home
-    resources "/posts", PostController
+    resources "/posts", PostController, only: [:show, :index]
     resources "/comments", CommentController, only: [:create, :update, :delete]
   end
 
@@ -46,7 +52,6 @@ defmodule FoodieFriendsWeb.Router do
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
-
 
   ## Authentication routes
 

@@ -4,10 +4,10 @@ defmodule FoodieFriends.Accounts.User do
 
   schema "users" do
     field :email, :string
+    field :username, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
-    field :username, :string
 
     timestamps()
   end
@@ -40,6 +40,7 @@ defmodule FoodieFriends.Accounts.User do
     |> cast(attrs, [:email, :password, :username])
     |> validate_email(opts)
     |> validate_password(opts)
+    |> validate_username()
   end
 
   defp validate_email(changeset, opts) do
