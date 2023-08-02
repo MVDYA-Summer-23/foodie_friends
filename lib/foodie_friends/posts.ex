@@ -58,9 +58,9 @@ defmodule FoodieFriends.Posts do
 
   """
   def get_post!(id) do
-    comments_query = from(c in Comment, order_by: [desc: c.inserted_at, desc: c.id])
+    comments_query = from(c in Comment, order_by: [desc: c.inserted_at, desc: c.id], preload: [:user])
 
-    post_query = from(p in Post, preload: [comments: ^comments_query])
+    post_query = from(p in Post, preload: [:user, comments: ^comments_query])
 
     Repo.get!(post_query, id)
   end
