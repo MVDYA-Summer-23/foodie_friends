@@ -1,6 +1,6 @@
 <.header>
   Post <%= @post.id %>
-  <:subtitle>This is a post record from your database.</:subtitle>
+  <:subtitle>By username: <%= @post.user.username %></:subtitle>
   <:actions>
     <.link href={~p"/posts/#{@post}/edit"}>
       <.button>Edit post</.button>
@@ -14,24 +14,25 @@
   <:item title="Content"><%= @post.content %></:item>
 </.list>
 
-<%!-- TODO: Show form only if user is signed in? --%>
-<%!-- <%= if assigns[:current_user] do %> --%>
+<%= if assigns[:current_user] do %>
   <.simple_form :let={f} for={@comment_changeset} action={~p"/comments"}>
-  <%!-- <.input type="hidden" field={f[:user_id]} value={@current_user.id} /> --%>
+    <.input type="hidden" field={f[:user_id]} value={@current_user.id} />
     <.input type="hidden" field={f[:post_id]} value={@post.id} />
     <.input field={f[:content]} type="text" label="Write a Comment" />
     <:actions>
       <.button>Comment</.button>
     </:actions>
   </.simple_form>
-<%!-- <% else %>
+<% else %>
+  <%!-- TODO: Signing in should redirect back to post --%>
   <div class="mt-10 flex justify-end">
     <.link href={~p"/users/log_in"}>
       <.button>Sign in to comment</.button>
     </.link>
   </div>
-<% end %> --%>
+<% end %>
 
+<%!-- TODO: Add user's username to each comment --%>
 <.table id="posts" rows={@post.comments}>
   <:col :let={comment} label="Comments">
     <span id={"comment-content-#{comment.id}"}>
