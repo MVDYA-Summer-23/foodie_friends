@@ -5,6 +5,7 @@ defmodule FoodieFriendsWeb.CommentController do
   alias FoodieFriends.Comments.Comment
   alias FoodieFriends.Posts
 
+  # TODO: Check if this action is even necessary given that posts should include comment changesets for comment forms
   def new(conn, _params) do
     changeset = Comments.change_comment(%Comment{})
     render(conn, :new, changeset: changeset)
