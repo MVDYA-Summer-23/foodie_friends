@@ -12,6 +12,9 @@
   <:item title="Title"><%= @post.title %></:item>
   <:item title="Posted On"><%= @post.published_on %></:item>
   <:item title="Content"><%= @post.content %></:item>
+  <:item title="Tags">
+    <%= Enum.map(@post.tags, & &1.name) |> Enum.join(", ") %>
+  </:item>
 </.list>
 
 <%= if assigns[:current_user] do %>
