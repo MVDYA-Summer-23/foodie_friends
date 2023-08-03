@@ -29,6 +29,7 @@
   />
   <.input field={f[:content]} type="text" label="Content" />
   <.input field={f[:visible]} type="checkbox" label="Visible" />
+  <.input field={f[:tag_ids]} type="select" label="Tags" multiple={true} options={@tag_options} />
   <:actions>
     <.button>Save Post</.button>
   </:actions>

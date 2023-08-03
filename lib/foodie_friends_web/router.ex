@@ -29,6 +29,7 @@ defmodule FoodieFriendsWeb.Router do
     get "/", PageController, :home
     resources "/posts", PostController, only: [:show, :index]
     resources "/comments", CommentController, only: [:create, :update, :delete]
+    resources "/tags", TagController
   end
 
   # Other scopes may use custom stacks.
