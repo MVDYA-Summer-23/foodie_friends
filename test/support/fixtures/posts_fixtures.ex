@@ -8,6 +8,8 @@ defmodule FoodieFriends.PostsFixtures do
   Generate a post.
   """
   def post_fixture(attrs \\ %{}) do
+    tags = attrs[:tags] || []
+
     {:ok, post} =
       attrs
       |> Enum.into(%{
@@ -16,7 +18,7 @@ defmodule FoodieFriends.PostsFixtures do
         visible: true,
         published_on: DateTime.utc_now()
       })
-      |> FoodieFriends.Posts.create_post()
+      |> FoodieFriends.Posts.create_post(tags)
 
     post
   end
