@@ -10,7 +10,7 @@ defmodule FoodieFriendsWeb.PostHTML do
   attr :current_user, :map, required: true
   attr :action, :string, required: true
   attr :tag_options, :list, required: true
-  attr :tag_ids, :list, required: true
+  # attr :tag_ids, :list, required: true
 
   def post_form(assigns)
 end
