@@ -18,10 +18,10 @@ defmodule FoodieFriendsWeb.CommentController do
         |> put_flash(:info, "Comment created successfully.")
         |> redirect(to: ~p"/posts/#{comment.post_id}")
 
-      {:error, %Ecto.Changeset{} = comment_changeset} ->
+      {:error, %Ecto.Changeset{} = _comment_changeset} ->
         post = Posts.get_post!(comment_params["post_id"])
         conn
-        |> put_flash(:error, "Comment not created. Errors?")
+        |> put_flash(:error, "Comment not created. Is your comment blank?")
         |> redirect(to: ~p"/posts/#{post.id}")
     end
   end
