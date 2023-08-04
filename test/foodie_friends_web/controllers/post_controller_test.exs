@@ -1,6 +1,9 @@
 defmodule FoodieFriendsWeb.PostControllerTest do
   use FoodieFriendsWeb.ConnCase
 
+  alias FoodieFriends.Posts
+  alias FoodieFriends.Posts.CoverImage
+
   import FoodieFriends.PostsFixtures
   import FoodieFriends.CommentsFixtures
   import FoodieFriends.AccountsFixtures
@@ -141,6 +144,18 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       assert html_response(conn, 200) =~ "some updated content"
     end
 
+    test "update post with cover image", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      conn = log_in_user(conn, user)
+      conn = put(conn, ~p"/posts/#{post}", post: %{cover_image: %{url: "https://www.example.com/image.png"}})
+      assert redirected_to(conn) == ~p"/posts/#{post}"
+
+      conn = get(conn, ~p"/posts/#{post}")
+      assert %CoverImage{url: "https://www.example.com/image.png"} = Posts.get_post!(post.id).cover_image
+      assert html_response(conn, 200) =~ "https://www.example.com/image.png"
+    end
+
     test "renders errors when data is invalid", %{conn: conn} do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
@@ -185,4 +200,5 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       assert redirected_to(conn) == ~p"/posts"
     end
   end
+
 end
