@@ -11,7 +11,7 @@ defmodule FoodieFriends.TagsFixtures do
     {:ok, tag} =
       attrs
       |> Enum.into(%{
-
+        name: "some name"
       })
       |> FoodieFriends.Tags.create_tag()
 

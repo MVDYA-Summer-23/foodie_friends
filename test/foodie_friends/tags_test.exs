@@ -8,7 +8,7 @@ defmodule FoodieFriends.TagsTest do
 
     import FoodieFriends.TagsFixtures
 
-    @invalid_attrs %{}
+    @invalid_attrs %{name: nil}
 
     test "list_tags/0 returns all tags" do
       tag = tag_fixture()
@@ -21,9 +21,9 @@ defmodule FoodieFriends.TagsTest do
     end
 
     test "create_tag/1 with valid data creates a tag" do
-      valid_attrs = %{}
+      valid_attrs = %{name: "some name"}
 
-      assert {:ok, %Tag{} = tag} = Tags.create_tag(valid_attrs)
+      assert {:ok, %Tag{} = _tag} = Tags.create_tag(valid_attrs)
     end
 
     test "create_tag/1 with invalid data returns error changeset" do
@@ -32,9 +32,9 @@ defmodule FoodieFriends.TagsTest do
 
     test "update_tag/2 with valid data updates the tag" do
       tag = tag_fixture()
-      update_attrs = %{}
+      update_attrs = %{name: "some new name"}
 
-      assert {:ok, %Tag{} = tag} = Tags.update_tag(tag, update_attrs)
+      assert {:ok, %Tag{} = _tag} = Tags.update_tag(tag, update_attrs)
     end
 
     test "update_tag/2 with invalid data returns error changeset" do

@@ -3,9 +3,9 @@ defmodule FoodieFriendsWeb.TagControllerTest do
 
   import FoodieFriends.TagsFixtures
 
-  @create_attrs %{}
-  @update_attrs %{}
-  @invalid_attrs %{}
+  @create_attrs %{name: "some name"}
+  @update_attrs %{name: "some updated name"}
+  @invalid_attrs %{name: nil}
 
   describe "index" do
     test "lists all tags", %{conn: conn} do

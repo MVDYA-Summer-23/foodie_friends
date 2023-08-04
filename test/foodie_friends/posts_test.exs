@@ -2,21 +2,25 @@ defmodule FoodieFriends.PostsTest do
   use FoodieFriends.DataCase
 
   alias FoodieFriends.Posts
+  alias FoodieFriends.Posts.Post
+  alias FoodieFriends.Comments
+  alias FoodieFriends.Tags
+
+  import FoodieFriends.PostsFixtures
+  import FoodieFriends.CommentsFixtures
+  import FoodieFriends.AccountsFixtures
+  import FoodieFriends.TagsFixtures
 
   describe "posts" do
-    alias FoodieFriends.Posts.Post
-    alias FoodieFriends.Comments.Comment
-
-    import FoodieFriends.PostsFixtures
-    import FoodieFriends.CommentsFixtures
-    import FoodieFriends.AccountsFixtures
-
     @invalid_attrs %{content: nil, subtitle: nil, title: nil}
 
     test "list_posts/0 returns all posts" do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
-      assert Posts.list_posts() == [post]
+
+      listed_posts = Posts.list_posts() |> hd |> Map.delete(:tags)
+      post = Map.delete(post, :tags)
+      assert listed_posts == post
     end
 
     test "list_posts/0 returns all posts by newest to oldest" do
@@ -33,7 +37,7 @@ defmodule FoodieFriends.PostsTest do
         }
         |> Posts.create_post()
 
-      assert Posts.list_posts() == [newest_post, oldest_post]
+      assert Posts.list_posts() |> Enum.map(& &1.id) == [newest_post.id, oldest_post.id]
     end
 
     test "list_posts/0 returns only visible posts" do
@@ -50,12 +54,15 @@ defmodule FoodieFriends.PostsTest do
         }
         |> Posts.create_post()
 
-      assert Posts.list_posts() == [post]
+      listed_posts = Posts.list_posts() |> hd |> Map.delete(:tags)
+      post = Map.delete(post, :tags)
+      assert listed_posts == post
     end
 
     test "list_posts/0 returns only posts published before now (date/time)" do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
+
 
       {:ok, _future_post} =
         %{
@@ -67,7 +74,7 @@ defmodule FoodieFriends.PostsTest do
         }
         |> Posts.create_post()
 
-      assert Posts.list_posts() == [post]
+      assert Posts.list_posts() |> Enum.map(& &1.id) == [post.id]
     end
 
     test "get_post!/1 with a given post id returns the post, without regard for other preloaded fields" do
@@ -77,7 +84,6 @@ defmodule FoodieFriends.PostsTest do
       assert Map.delete(fetched_post, :comments) == Map.delete(fetched_post, :comments)
     end
 
-    # TODO: create test "get_post!/1 returns the post with given, its author's username, and associated comments"
     test "get_post!/1 returns the post with given id and comments" do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
@@ -123,6 +129,27 @@ defmodule FoodieFriends.PostsTest do
       assert post.published_on == ~U[2023-07-26 20:41:00Z]
     end
 
+    test "create_post/1 with tags" do
+      user = user_fixture()
+      tag1 = tag_fixture(%{name: "appetizer"})
+      tag2 = tag_fixture(%{name: "salads"})
+
+      valid_attrs1 = %{content: "some content", title: "post 1", user_id: user.id, published_on: DateTime.utc_now()}
+      valid_attrs2 = %{content: "some content", title: "post 2", user_id: user.id, published_on: DateTime.utc_now()}
+
+      assert {:ok, %Post{} = post1} = Posts.create_post(valid_attrs1, [tag1, tag2])
+      assert {:ok, %Post{} = post2} = Posts.create_post(valid_attrs2, [tag1])
+
+      # posts have many tags
+      assert Repo.preload(post1, :tags).tags == [tag1, tag2]
+      assert Repo.preload(post2, :tags).tags == [tag1]
+
+      # tags have many posts
+      # we preload posts: [:tags] because posts contain the list of tags when created
+      assert Repo.preload(tag1, posts: [:tags]).posts == [post1, post2]
+      assert Repo.preload(tag2, posts: [:tags]).posts == [post1]
+    end
+
     test "create_post/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Posts.create_post(@invalid_attrs)
     end
@@ -166,6 +193,8 @@ defmodule FoodieFriends.PostsTest do
       post = post_fixture(title: "burger", user_id: user.id)
       post1 = post_fixture(title: "ice-cream", user_id: user.id)
       post2 = post_fixture(title: "bacon cheeseburger", user_id: user.id)
+
+      [post, post1, post2] = Enum.map([post, post1, post2], &Map.delete(&1, :tags))
 
       assert Posts.search("burger") == [post, post2]
       assert Posts.search("Bur") == [post, post2]

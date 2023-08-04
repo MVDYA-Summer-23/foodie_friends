@@ -41,6 +41,7 @@ defmodule FoodieFriends.Posts do
       end
 
     Repo.all(query)
+    |> Enum.map(&Map.delete(&1, :tags))
   end
 
   @doc """
