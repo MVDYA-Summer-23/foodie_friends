@@ -25,6 +25,7 @@ defmodule FoodieFriendsWeb.PostController do
   def create(conn, %{"post" => post_params}) do
     # IO.inspect(post_params, label: "post_params")
     tags = Map.get(post_params, "tag_ids", []) |> Enum.map(&Tags.get_tag!/1)
+
     case Posts.create_post(post_params, tags) do
       {:ok, post} ->
         conn
@@ -32,7 +33,10 @@ defmodule FoodieFriendsWeb.PostController do
         |> redirect(to: ~p"/posts/#{post}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, :new, changeset: changeset)
+        render(conn, :new,
+          changeset: changeset,
+          tag_options: tag_options(Enum.map(tags, & &1.id))
+        )
     end
   end
 
@@ -45,7 +49,12 @@ defmodule FoodieFriendsWeb.PostController do
   def edit(conn, %{"id" => id}) do
     post = Posts.get_post!(id)
     changeset = Posts.change_post(post)
-    render(conn, :edit, post: post, changeset: changeset, tag_options: tag_options(Enum.map(post.tags, & &1.id)))
+
+    render(conn, :edit,
+      post: post,
+      changeset: changeset,
+      tag_options: tag_options(Enum.map(post.tags, & &1.id))
+    )
   end
 
   def update(conn, %{"id" => id, "post" => post_params}) do
@@ -59,7 +68,11 @@ defmodule FoodieFriendsWeb.PostController do
         |> redirect(to: ~p"/posts/#{post}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, :edit, post: post, changeset: changeset, tag_options: tag_options(Enum.map(tags, & &1.id)))
+        render(conn, :edit,
+          post: post,
+          changeset: changeset,
+          tag_options: tag_options(Enum.map(tags, & &1.id))
+        )
     end
   end
 
