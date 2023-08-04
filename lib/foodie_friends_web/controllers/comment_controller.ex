@@ -2,14 +2,9 @@ defmodule FoodieFriendsWeb.CommentController do
   use FoodieFriendsWeb, :controller
 
   alias FoodieFriends.Comments
-  alias FoodieFriends.Comments.Comment
   alias FoodieFriends.Posts
 
-  # TODO: Check if this action is even necessary given that posts should include comment changesets for comment forms
-  # def new(conn, _params) do
-  #   changeset = Comments.change_comment(%Comment{})
-  #   render(conn, :new, changeset: changeset)
-  # end
+  plug :require_user_owns_comment when action in [:update, :delete]
 
   def create(conn, %{"comment" => comment_params}) do
     case Comments.create_comment(comment_params) do
@@ -20,17 +15,12 @@ defmodule FoodieFriendsWeb.CommentController do
 
       {:error, %Ecto.Changeset{} = _comment_changeset} ->
         post = Posts.get_post!(comment_params["post_id"])
+
         conn
         |> put_flash(:error, "Comment not created. Is your comment blank?")
         |> redirect(to: ~p"/posts/#{post.id}")
     end
   end
-
-  # def edit(conn, %{"id" => id}) do
-  #   comment = Comments.get_comment!(id)
-  #   changeset = Comments.change_comment(comment)
-  #   render(conn, :edit, comment: comment, changeset: changeset)
-  # end
 
   def update(conn, %{"id" => id, "comment" => comment_params}) do
     comment = Comments.get_comment!(id)
@@ -55,5 +45,18 @@ defmodule FoodieFriendsWeb.CommentController do
     conn
     |> put_flash(:info, "Comment deleted successfully.")
     |> redirect(to: ~p"/posts/#{comment.post_id}")
+  end
+
+  defp require_user_owns_comment(conn, _) do
+    comment = Comments.get_comment!(conn.params["id"])
+
+    if comment.user_id != conn.assigns.current_user.id do
+      conn
+      |> put_flash(:error, "You can only edit or delete your own comments.")
+      |> redirect(to: ~p"/posts/#{comment.post_id}")
+      |> halt()
+    else
+      conn
+    end
   end
 end
