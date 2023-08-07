@@ -8,6 +8,7 @@ defmodule FoodieFriendsWeb.PostController do
   alias FoodieFriends.Tags
 
   plug(:require_user_owns_post when action in [:edit, :update, :delete])
+  plug :page_title
 
   def index(conn, %{"q" => search_params}) do
     posts = Posts.search(search_params)
@@ -107,4 +108,6 @@ defmodule FoodieFriendsWeb.PostController do
       [key: tag.name, value: tag.id, selected: tag.id in selected_ids]
     end)
   end
+
+  defp page_title(conn, _params), do: assign(conn, :page_title, "Posts")
 end
