@@ -85,6 +85,7 @@ defmodule FoodieFriendsWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import FoodieFriendsWeb.CoreComponents
+      import FoodieFriendsWeb.FoodieFriendsComponents
       import FoodieFriendsWeb.Gettext
 
       # Shortcut for generating JS commands
