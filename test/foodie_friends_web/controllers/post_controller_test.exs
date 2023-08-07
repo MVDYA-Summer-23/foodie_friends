@@ -1,6 +1,9 @@
 defmodule FoodieFriendsWeb.PostControllerTest do
   use FoodieFriendsWeb.ConnCase
 
+  alias FoodieFriends.Posts
+  alias FoodieFriends.Posts.CoverImage
+
   import FoodieFriends.PostsFixtures
   import FoodieFriends.CommentsFixtures
   import FoodieFriends.AccountsFixtures
@@ -77,6 +80,38 @@ defmodule FoodieFriendsWeb.PostControllerTest do
     end
   end
 
+  describe "show post" do
+    test "renders post information", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+
+      conn = conn |> get(~p"/posts/#{post}/")
+      response = html_response(conn, 200)
+
+      assert response =~ post.title
+      assert response =~ user.username
+    end
+
+    test "renders post comments", %{conn: conn} do
+      post_user = user_fixture()
+      comment_user = user_fixture()
+      post = post_fixture(user_id: post_user.id)
+
+      comment =
+        comment_fixture(
+          content: "some comment content",
+          user_id: comment_user.id,
+          post_id: post.id
+        )
+
+      conn = conn |> get(~p"/posts/#{post}/")
+      response = html_response(conn, 200)
+
+      assert response =~ comment.content
+      assert response =~ comment_user.username
+    end
+  end
+
   describe "create post" do
     test "redirects to show when data is valid", %{conn: conn} do
       user = user_fixture()
@@ -90,13 +125,59 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       assert html_response(conn, 200) =~ "Post #{id}"
     end
 
-    # TODO: fix this test!
-    @tag :skip
+    test "with cover image", %{conn: conn} do
+      user = user_fixture()
+      conn = log_in_user(conn, user)
+
+      create_attrs = %{
+        content: "some content",
+        title: "some title",
+        visible: true,
+        published_on: DateTime.utc_now(),
+        user_id: user.id,
+        cover_image: %{
+          url: "https://www.example.com/image.png"
+        }
+      }
+
+      conn = post(conn, ~p"/posts", post: create_attrs)
+
+      assert %{id: id} = redirected_params(conn)
+      assert redirected_to(conn) == ~p"/posts/#{id}"
+
+      conn = get(conn, ~p"/posts/#{id}")
+      assert %CoverImage{url: "https://www.example.com/image.png"} = Posts.get_post!(id).cover_image
+      assert html_response(conn, 200) =~ "https://www.example.com/image.png"
+    end
+
+    test "with tags", %{conn: conn} do
+      user = user_fixture()
+      conn = log_in_user(conn, user)
+
+      tag1 = tag_fixture(name: "tag 1 name")
+      tag2 = tag_fixture(name: "tag 2 name")
+
+      create_attrs = %{
+        content: "some content",
+        title: "some title",
+        visible: true,
+        published_on: DateTime.utc_now(),
+        user_id: user.id,
+        tag_ids: [tag1.id, tag2.id]
+      }
+
+      conn = post(conn, ~p"/posts", post: create_attrs)
+
+      assert %{id: id} = redirected_params(conn)
+      assert redirected_to(conn) == ~p"/posts/#{id}"
+
+      assert Posts.get_post!(id).tags == [tag1, tag2]
+    end
+
     test "renders errors when data is invalid", %{conn: conn} do
       user = user_fixture()
       tags = [tag_fixture()]
-      # invalid_post = Map.put(@invalid_attrs, :user_id, user.id)
-      invalid_post = @invalid_attrs |> Enum.into(%{user_id: user.id, tag_options: tags}) |> IO.inspect()
+      invalid_post = @invalid_attrs |> Enum.into(%{user_id: user.id, tag_options: tags})
       conn = conn |> log_in_user(user) |> post(~p"/posts", post: invalid_post)
       assert html_response(conn, 200) =~ "New Post"
     end
@@ -141,6 +222,44 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       assert html_response(conn, 200) =~ "some updated content"
     end
 
+    test "with cover image", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      conn = log_in_user(conn, user)
+      conn = put(conn, ~p"/posts/#{post}", post: %{cover_image: %{url: "https://www.example.com/image.png"}})
+      assert redirected_to(conn) == ~p"/posts/#{post}"
+
+      conn = get(conn, ~p"/posts/#{post}")
+      assert %CoverImage{url: "https://www.example.com/image.png"} = Posts.get_post!(post.id).cover_image
+      assert html_response(conn, 200) =~ "https://www.example.com/image.png"
+    end
+
+    test "with tags", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+      tag1 = tag_fixture(name: "tag 1 name")
+      tag2 = tag_fixture(name: "tag 2 name")
+
+      conn = log_in_user(conn, user)
+
+      conn = put(conn, ~p"/posts/#{post}", post: %{tag_ids: [tag1.id, tag2.id]})
+      assert redirected_to(conn) == ~p"/posts/#{post}"
+
+      assert FoodieFriends.Repo.preload(post, :tags, force: true).tags == [tag1, tag2]
+    end
+
+    test "a user cannot update another user's post", %{conn: conn} do
+      post_user = user_fixture()
+      other_user = user_fixture()
+      post = post_fixture(user_id: post_user.id)
+      conn = conn |> log_in_user(other_user) |> put(~p"/posts/#{post}", post: @update_attrs)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "You can only edit or delete your own posts."
+
+      assert redirected_to(conn) == ~p"/posts/#{post}"
+    end
+
     test "renders errors when data is invalid", %{conn: conn} do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
@@ -173,16 +292,27 @@ defmodule FoodieFriendsWeb.PostControllerTest do
       end)
     end
 
+    test "deletes chosen post with cover image", %{conn: conn} do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id, cover_image: %{url: "https://www.example.com/image.png"})
+      conn = conn |> log_in_user(user) |> delete(~p"/posts/#{post}")
+      assert redirected_to(conn) == ~p"/posts"
+
+      assert_error_sent(404, fn ->
+        get(conn, ~p"/posts/#{post}")
+      end)
+    end
+
     test "a user cannot delete another user's post", %{conn: conn} do
       post_user = user_fixture()
       other_user = user_fixture()
       post = post_fixture(user_id: post_user.id)
       conn = conn |> log_in_user(other_user) |> delete(~p"/posts/#{post}")
 
-      # TODO: should we be testing flash messages too?
-      # assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "You can only edit or delete your own posts."
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "You can only edit or delete your own posts."
 
-      assert redirected_to(conn) == ~p"/posts"
+      assert redirected_to(conn) == ~p"/posts/#{post}"
     end
   end
+
 end

@@ -1,10 +1,8 @@
 defmodule FoodieFriends.PostsTest do
   use FoodieFriends.DataCase
 
-  alias FoodieFriends.Posts
-  alias FoodieFriends.Posts.Post
-  alias FoodieFriends.Comments
-  alias FoodieFriends.Tags
+  alias FoodieFriends.{Posts, Comments, Tags}
+  alias FoodieFriends.Posts.{Post, CoverImage}
 
   import FoodieFriends.PostsFixtures
   import FoodieFriends.CommentsFixtures
@@ -63,7 +61,6 @@ defmodule FoodieFriends.PostsTest do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
 
-
       {:ok, _future_post} =
         %{
           content: "future post content",
@@ -97,6 +94,16 @@ defmodule FoodieFriends.PostsTest do
       assert fetched_comment.user == user
     end
 
+    test "get_post!/1 loads the cover_image association" do
+      user = user_fixture()
+
+      post =
+        post_fixture(user_id: user.id, cover_image: %{url: "http://www.example.com/image.png"})
+
+      assert %CoverImage{url: "http://www.example.com/image.png"} =
+               Posts.get_post!(post.id).cover_image
+    end
+
     test "create_post/1 with valid data creates a post" do
       now = DateTime.utc_now()
       user = user_fixture()
@@ -112,6 +119,24 @@ defmodule FoodieFriends.PostsTest do
       assert post.content == "some created content"
       assert post.title == "some created title"
       assert DateTime.to_unix(post.published_on) == DateTime.to_unix(now)
+    end
+
+    test "create_post/1 with image" do
+      valid_attrs = %{
+        content: "some content",
+        title: "some title",
+        cover_image: %{
+          url: "https://www.example.com/image.png"
+        },
+        visible: true,
+        published_on: DateTime.utc_now(),
+        user_id: user_fixture().id
+      }
+
+      assert {:ok, %Post{} = post} = Posts.create_post(valid_attrs)
+
+      assert %CoverImage{url: "https://www.example.com/image.png"} =
+               Repo.preload(post, :cover_image).cover_image
     end
 
     test "create_post/1 uses the appropriate datetime for the published_on field" do
@@ -134,8 +159,19 @@ defmodule FoodieFriends.PostsTest do
       tag1 = tag_fixture(%{name: "appetizer"})
       tag2 = tag_fixture(%{name: "salads"})
 
-      valid_attrs1 = %{content: "some content", title: "post 1", user_id: user.id, published_on: DateTime.utc_now()}
-      valid_attrs2 = %{content: "some content", title: "post 2", user_id: user.id, published_on: DateTime.utc_now()}
+      valid_attrs1 = %{
+        content: "some content",
+        title: "post 1",
+        user_id: user.id,
+        published_on: DateTime.utc_now()
+      }
+
+      valid_attrs2 = %{
+        content: "some content",
+        title: "post 2",
+        user_id: user.id,
+        published_on: DateTime.utc_now()
+      }
 
       assert {:ok, %Post{} = post1} = Posts.create_post(valid_attrs1, [tag1, tag2])
       assert {:ok, %Post{} = post2} = Posts.create_post(valid_attrs2, [tag1])
@@ -169,10 +205,44 @@ defmodule FoodieFriends.PostsTest do
       assert post.title == "some updated title"
     end
 
+    test "update_post/1 add an image" do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id)
+
+      assert {:ok, %Post{} = post} =
+               Posts.update_post(post, %{
+                 cover_image: %{url: "https://www.example.com/image2.png"}
+               })
+
+      assert post.cover_image.url == "https://www.example.com/image2.png"
+    end
+
+    test "update_post/1 update existing image" do
+      user = user_fixture()
+
+      post =
+        post_fixture(user_id: user.id, cover_image: %{url: "https://www.example.com/image.png"})
+
+      assert {:ok, %Post{} = post} =
+               Posts.update_post(post, %{
+                 cover_image: %{url: "https://www.example.com/image2.png"}
+               })
+
+      assert post.cover_image.url == "https://www.example.com/image2.png"
+    end
+
     test "update_post/2 with invalid data returns error changeset" do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
       assert {:error, %Ecto.Changeset{}} = Posts.update_post(post, @invalid_attrs)
+    end
+
+    test "delete_post/1 deletes post and cover image" do
+      user = user_fixture()
+      post = post_fixture(user_id: user.id, cover_image: %{url: "https://www.example.com/image.png"})
+      assert {:ok, %Post{}} = Posts.delete_post(post)
+      assert_raise Ecto.NoResultsError, fn -> Posts.get_post!(post.id) end
+      assert_raise Ecto.NoResultsError, fn -> Repo.get!(CoverImage, post.cover_image.id) end
     end
 
     test "delete_post/1 deletes the post" do

@@ -12,6 +12,11 @@
   <:item title="Title"><%= @post.title %></:item>
   <:item title="Posted On"><%= @post.published_on %></:item>
   <:item title="Content"><%= @post.content %></:item>
+  <:item title="Image">
+    <%= if @post.cover_image do %>
+      <img src={@post.cover_image.url} width="300" />
+    <% end %>
+  </:item>
   <:item title="Tags">
     <%= Enum.map(@post.tags, & &1.name) |> Enum.join(", ") %>
   </:item>
@@ -27,7 +32,6 @@
     </:actions>
   </.simple_form>
 <% else %>
-  <%!-- TODO: Signing in should redirect back to post --%>
   <div class="mt-10 flex justify-end">
     <.link href={~p"/users/log_in"}>
       <.button>Sign in to comment</.button>
@@ -35,9 +39,12 @@
   </div>
 <% end %>
 
-<%!-- TODO: Add user's username to each comment --%>
+<%!-- TODO: Make username cleaner, possibly --%>
 <.table id="posts" rows={@post.comments}>
   <:col :let={comment} label="Comments">
+    <p>
+      <%= comment.user.username %>
+    </p>
     <span id={"comment-content-#{comment.id}"}>
       <%= comment.content %>
     </span>
