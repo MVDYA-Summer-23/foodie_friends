@@ -1,9 +1,9 @@
 defmodule FoodieFriendsWeb.FoodieFriendsComponents do
+  # TODO: Rename module please
   use Phoenix.Component
 
   # alias Phoenix.LiveView.JS
   # import FoodieFriendsWeb.Gettext
-
 
   def page_header(assigns) do
     ~H"""
