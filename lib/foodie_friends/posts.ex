@@ -44,6 +44,16 @@ defmodule FoodieFriends.Posts do
     |> Enum.map(&Map.delete(&1, :tags))
   end
 
+  def search_by_tag(tag_name) do
+    query =
+      from p in Post,
+        join: t in assoc(p, :tags),
+        where: t.name == ^tag_name,
+        preload: [:tags]
+
+    posts = Repo.all(query)
+  end
+
   @doc """
   Gets a single post.
 
@@ -59,7 +69,8 @@ defmodule FoodieFriends.Posts do
 
   """
   def get_post!(id) do
-    comments_query = from(c in Comment, order_by: [desc: c.inserted_at, desc: c.id], preload: [:user])
+    comments_query =
+      from(c in Comment, order_by: [desc: c.inserted_at, desc: c.id], preload: [:user])
 
     post_query = from(p in Post, preload: [:user, :cover_image, :tags, comments: ^comments_query])
 

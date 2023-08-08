@@ -1,11 +1,16 @@
 # About
 This group project is for 3 participants in the Dockyard Academy, Summer 2023 cohort. The goal is to practice developing a web application using a blog as an example.
 
-# Features
+# Implemented Features
 * Home page
 * Posts with comments, tags, and an image
 * User registration required for creating and editing one's own content
 * One or more static content pages
+
+# Desired Features
+* Ability to search posts by tag
+* About Us on home page, in one of the sections
+* Images (possibly changing images), in the header
 
 # Brand Description
 ## Foodie Friends Blog
