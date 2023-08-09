@@ -48,10 +48,10 @@ defmodule FoodieFriends.Posts do
     query =
       from p in Post,
         join: t in assoc(p, :tags),
-        where: t.name == ^tag_name,
+        where: ilike(t.name, ^"%#{tag_name}%"),
         preload: [:tags]
 
-    posts = Repo.all(query)
+    Repo.all(query)
   end
 
   @doc """
