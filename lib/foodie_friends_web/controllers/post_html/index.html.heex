@@ -16,6 +16,10 @@
   <input type="text" name="q" placeholder="Search for blog posts">
   <button type="submit">Search</button>
 </form>
+<form action="/posts" method="get">
+  <input type="text" name="t" placeholder="Search for posts by tag">
+  <button type="submit">Search</button>
+</form>
 
 
 <.table id="posts" rows={@posts} row_click={&JS.navigate(~p"/posts/#{&1}")}>
