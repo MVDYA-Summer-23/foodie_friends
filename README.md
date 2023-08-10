@@ -9,7 +9,7 @@ This group project is for 3 participants in the Dockyard Academy, Summer 2023 co
 
 # Desired Features
 * Ability to search posts by tag
-* About Us on home page, in one of the sections
+*  on home page, in one of the sections
 * Images (possibly changing images), in the header
 
 # Brand Description

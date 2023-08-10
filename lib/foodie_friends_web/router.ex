@@ -27,6 +27,7 @@ defmodule FoodieFriendsWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/about", PageController, :about
     resources "/posts", PostController, only: [:show, :index]
     resources "/comments", CommentController, only: [:create, :update, :delete]
     resources "/tags", TagController
