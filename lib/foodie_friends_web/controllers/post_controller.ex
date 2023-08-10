@@ -10,6 +10,11 @@ defmodule FoodieFriendsWeb.PostController do
   plug(:require_user_owns_post when action in [:edit, :update, :delete])
   plug :page_title
 
+  def index(conn, %{"t" => search_params}) do
+    posts = Posts.search_by_tag(search_params)
+    render(conn, :index, posts: posts, search_params: search_params)
+  end
+
   def index(conn, %{"q" => search_params}) do
     posts = Posts.search(search_params)
     render(conn, :index, posts: posts, search_params: search_params)
