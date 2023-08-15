@@ -28,7 +28,7 @@ swap_size_mb = 512
     type = "connections"
     hard_limit = 1000
     soft_limit = 1000
-  [http_service.checks]
+  [[http_service.checks]]
     grace_period = "10s"
     interval = "30s"
     method = "GET"
