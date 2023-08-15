@@ -28,3 +28,5 @@ swap_size_mb = 512
     type = "connections"
     hard_limit = 1000
     soft_limit = 1000
+  [http_service.checks]
+    timeout = "100s"
