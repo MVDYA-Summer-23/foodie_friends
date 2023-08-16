@@ -7,6 +7,11 @@
   </:actions>
 </.header>
 
+<form action="/posts" method="get">
+  <input type="text" name="t" placeholder="Search for posts by tag">
+  <button type="submit">Search</button>
+</form>
+
 <.table id="tags" rows={@tags} row_click={&JS.navigate(~p"/tags/#{&1}")}>
   <:col :let={tag} label="Name"><%= tag.name %></:col>
   <:action :let={tag}>
