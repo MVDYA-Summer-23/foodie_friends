@@ -18,38 +18,23 @@ defmodule FoodieFriends.Posts do
       [%Post{}, ...]
 
   """
-  def list_posts do
-    from(p in Post,
-      where: p.visible and p.published_on <= ^DateTime.utc_now(),
+  def list_posts(search_params \\ "") do
+     p in Post
+    |> from(
+      where: p.visible,
+      where: ilike(p.title, ^"%#{search_params}%") or ilike(p.content, ^"%#{search_params}%"),
       order_by: [desc: p.published_on]
     )
     |> Repo.all()
   end
 
-  def search(search_params) do
-    query =
-      if String.trim(search_params) == "" do
-        # If the search term is empty, return all posts
-        from(p in Post, where: p.visible, order_by: [desc: p.published_on])
-      else
-        # Perform the search based on the post title or content
-        from(p in Post,
-          where: p.visible,
-          where: ilike(p.title, ^"%#{search_params}%") or ilike(p.content, ^"%#{search_params}%"),
-          order_by: [desc: p.published_on]
-        )
-      end
-
-    Repo.all(query)
-    |> Enum.map(&Map.delete(&1, :tags))
-  end
-
   def search_by_tag(tag_name) do
     query =
-      from p in Post,
+      from(p in Post,
         join: t in assoc(p, :tags),
         where: ilike(t.name, ^"%#{tag_name}%"),
         preload: [:tags]
+      )
 
     Repo.all(query)
   end

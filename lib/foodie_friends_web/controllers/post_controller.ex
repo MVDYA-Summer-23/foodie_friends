@@ -16,7 +16,7 @@ defmodule FoodieFriendsWeb.PostController do
   end
 
   def index(conn, %{"q" => search_params}) do
-    posts = Posts.search(search_params)
+    posts = Posts.list_posts(search_params)
     render(conn, :index, posts: posts, search_params: search_params)
   end
 

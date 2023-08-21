@@ -15,10 +15,8 @@ defmodule FoodieFriends.PostsTest do
     test "list_posts/0 returns all posts" do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
-
-      listed_posts = Posts.list_posts() |> hd |> Map.delete(:tags)
-      post = Map.delete(post, :tags)
-      assert listed_posts == post
+      assert [found] = Posts.list_posts() |> Repo.preload(:tags)
+      assert found == post
     end
 
     test "list_posts/0 returns all posts by newest to oldest" do
@@ -61,7 +59,7 @@ defmodule FoodieFriends.PostsTest do
       user = user_fixture()
       post = post_fixture(user_id: user.id)
 
-      {:ok, _future_post} =
+      {:ok, future_post} =
         %{
           content: "future post content",
           title: "future post title",
@@ -264,14 +262,13 @@ defmodule FoodieFriends.PostsTest do
       post1 = post_fixture(title: "ice-cream", user_id: user.id)
       post2 = post_fixture(title: "bacon cheeseburger", user_id: user.id)
 
-      [post, post1, post2] = Enum.map([post, post1, post2], &Map.delete(&1, :tags))
 
-      assert Posts.search("burger") == [post, post2]
-      assert Posts.search("Bur") == [post, post2]
-      assert Posts.search("BuRger") == [post, post2]
-      assert Posts.search("BURGER") == [post, post2]
-      assert Posts.search("") == [post, post1, post2]
-      refute Posts.search("burger") == [post1]
+      assert Posts.list_posts("burger") |> Repo.preload(:tags) == [post, post2]
+      assert Posts.list_posts("Bur") == [post, post2]
+      assert Posts.list_posts("BuRger") == [post, post2]
+      assert Posts.list_posts("BURGER") == [post, post2]
+      assert Posts.list_posts("") == [post, post1, post2]
+      refute Posts.list_posts("burger") == [post1]
     end
   end
 end
